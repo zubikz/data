@@ -1,0 +1,318 @@
+﻿
+@model practice1.Models.student
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+<script src="~/Scripts/jquery-3.3.1.js"></script>
+
+<div class="container">
+    <div class="badge">
+        <span class="glyphicon glyphicon-envelope"></span><span class="count">@ViewBag.data</span>
+    </div>
+</div>
+<div class="container">
+    <h2>Users Record</h2>
+    <button type="button" class="btn btn-primary" onclick="clearTextBox();" data-toggle="modal" data-target="#myModal">Add New User</button><br /><br />
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>
+                    ID
+                </th>
+                <th>
+                    Name
+                </th>
+                <th>
+                    Age
+                </th>
+                <th>
+                    State
+                </th>
+                <th>
+                    Country
+                </th>
+                <th>
+                    Action
+                </th>
+            </tr>
+        </thead>
+        <tbody class="tbody"></tbody>
+    </table>
+</div>
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">×</button>
+                <h4 class="modal-title" id="myModalLabel">Add Employee</h4>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label for="Id">ID</label>
+                        <input type="text" class="form-control" id="Id" placeholder="Id" disabled="disabled" />
+                    </div>
+                    <div class="form-group">
+                        <label for="Name">Name</label>
+                        <input type="text" class="form-control" id="Name" placeholder="Name" />
+                    </div>
+                    <div class="form-group">
+                        <label for="Age">Age</label>
+                        <input type="text" class="form-control" id="Age" placeholder="Age" />
+                    </div>
+                    <div class="form-group">
+                        <label for="State">State</label>
+                        <input type="text" class="form-control" id="state" placeholder="state" />
+                    </div>
+                    <div class="form-group">
+                        <label for="Country">Country</label>
+                        <input type="text" class="form-control" id="Country" placeholder="Country" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="btnAdd" onclick="return Add();">Add</button>
+                <button type="button" class="btn btn-primary" id="btnUpdate" style="display:none;" onclick="Update();">Update</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        //debugger;
+
+        loadData();
+        $('.count').each(function () {
+            $(this).prop('Counter', 0).animate({
+                Counter: $(this).text()
+            }, {
+                    duration: 2000,
+                    easing: 'swing',
+                    step: function (now) {
+                        $(this).text(Math.ceil(now));
+                    }
+                });
+        });
+        //count();
+        //alert(dat);
+    });
+
+
+
+    function loadData() {
+        $.ajax({
+            url: "/Home/List",
+            type: "GET",
+            contentType: "application/json;charset=utf-8",
+            dataType: "json",
+            success: function (result) {
+                var count = result.length;
+                var html = '';
+                //console.log()
+                $.each(result, function (key, item) {
+                    html += '<tr>';
+                    html += '<td>' + item.Id + '</td>';
+                    html += '<td>' + item.Name + '</td>';
+                    html += '<td>' + item.Age + '</td>';
+                    html += '<td>' + item.state + '</td>';
+                    html += '<td>' + item.Country + '</td>';
+                    html += ' <td> <a href="#" class="btn btn-info" onclick="return GetByID(' + item.Id + ')">Edit</a>  <a href="#" class="btn btn-danger" onclick="Delete(' + item.Id + ')">Delete</a></td >';
+                    html += '</tr>';
+                });
+                //var list = {}; var count = result.keys(list).length;
+                //console.log(count);
+                $('.tbody').html(html);
+                $('#data').html(count);
+                //console.log(resul);
+            },
+            error: function (errormessage) {
+                alert(errormessage.responseText);
+            }
+        });
+    }
+
+
+
+
+
+    function Add() {
+        var res = validate();
+        if (res == false) {
+            return false;
+        }
+        //console.log($("#Name").val())
+        var objStd = {
+            Id: $("#Id").val(),
+            Name: $("#Name").val(),
+            Age: $("#Age").val(),
+            state: $("#state").val(),
+            Country: $("#Country").val()
+        };
+        //console.log(objStd);
+
+        $.ajax({
+            url: "/Home/Add",
+            type: "POST",
+            data: JSON.stringify(objStd),
+            contentType: "application/json;charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+                console.log(data);
+                loadData();
+                $('#myModal').modal('hide');
+
+            },
+            error: function (errormessage) {
+                alert(errormessage.responseText);
+            }
+        });
+    }
+
+    function GetByID(Id) {
+        $('#Name').css('border-color', 'light-grey');
+        $('#Age').css('border-color', 'light-grey');
+        $('#state').css('border-color', 'light-grey');
+        $('#Country').css('border-color', 'light-grey');
+        console.log(Id);
+        $.ajax({
+            url: "/Home/GetId/" + Id,
+            type: "GET",
+            contentType: "application/json;charset=utf-8",
+            dataType: "json",
+            success: function (result) {
+                $('#Id').val(result.Id);
+                $('#Name').val(result.Name);
+                $('#Age').val(result.Age);
+                $('#state').val(result.state);
+                $('#Country').val(result.Country);
+                $('#myModal').modal('show');
+                $('#btnAdd').hide();
+                $('#btnUpdate').show();
+
+            },
+            error: function (errorMessage) {
+                alert(errorMessage.responseText)
+            }
+        });
+        return false;
+    }
+
+    function Update() {
+        //isValid = true;
+        var res = validate();
+        if (res == false) {
+            return false;
+        }
+        var objstd = {
+            Id: $('#Id').val(),
+            Name: $('#Name').val(),
+            Age: $('#Age').val(),
+            state: $('#state').val(),
+            Country: $('#Country').val()
+
+        }
+        $.ajax({
+            url: "/Home/Update",
+            type: "POST",
+            data: JSON.stringify(objstd),
+            contentType: "application/json;charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+                console.log(data);
+                loadData();
+                $('#myModal').modal('hide');
+                $('#Id').val("");
+                $('#Name').val("");
+                $('#Age').val("");
+                $('#state').val("");
+                $('#Country').val("");
+            },
+            error: function (errormessage) {
+                alert(errormessage.responseText);
+            }
+
+
+        });
+
+
+        ///$("#update"){
+
+    }
+    function clearTextBox() {
+        $("#Id").val('');
+        $("#Name").val('');
+        $("#Age").val('');
+        $("#state").val('');
+        $("#Country").val('');
+        $("btnUpdate").hide();
+        $("btnAdd").show();
+        $("#Name").css("border-color", "light-grey");
+        $("#Age").css("border-color", "light-grey");
+        $("#state").css("border-color", "light-grey");
+        $("#Country").css("border-color", "light-grey");
+
+    }
+
+    function Delete(Id) {
+        var ans = confirm("  Do you Want to Delete this Data");
+        if (ans) {
+            $.ajax({
+                url: "/Home/Delete/" + Id,
+                type: "POST",
+                contentType: "application/json;charset=utf-8",
+                dataType: "json",
+                success: function (result) {
+                    loadData();
+                },
+                error: function (errormessage) {
+                    alert(errormessage.responseText)
+                }
+            });
+        }
+
+    }
+
+    function validate() {
+        var isValid = true;
+        if ($('#Name').val().trim() == "") {
+            $('#Name').css('border-color', 'red');
+            isValid = false;
+        }
+        else {
+            $('#Name').css('border-color', 'grey');
+        }
+        if ($('#Age').val().trim() == "") {
+            $('#Age').css('border-color', 'red');
+            isValid = false;
+        }
+        else {
+            $('#Age').css('border-color', 'grey');
+        }
+        if ($('#state').val().trim() == "") {
+            $('#state').css('border-color', 'red');
+            isValid = false;
+        }
+        else {
+            $('#state').css('border-color', 'grey');
+        }
+        if ($('#Country').val().trim() == "") {
+            $('#Country').css('border-color', 'red');
+            isValid = false;
+        }
+        else {
+            $('#Country').css('border-color', 'grey');
+        }
+        return isValid;
+    }
+
+
+</script>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/waypoints/2.0.3/waypoints.min.js"></script>
+<script src="jquery.counterup.min.js"></script>
